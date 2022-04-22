@@ -27,12 +27,10 @@ export default class IntroModal extends HTMLElement {
 		this.#introDescriptions = introDescriptions
 		this.#currentIndex = -1
 		this.#prevoisIndex = null
-		this.#introElementsBackgroundColors = new WeakMap()
-		this.#dimStyle = document.createElement('style')
 	}
 	connectedCallback() {
 		this.#setInitiateState()
-		// this.#createBackdrop()
+		this.#createBackdrop()
 
 		this.#closeBtn.addEventListener('click', () => {
 			this.remove()
@@ -45,7 +43,6 @@ export default class IntroModal extends HTMLElement {
 				return
 			}
 			this.#prevoisIndex = this.#currentIndex + 1
-			console.log(this.#currentIndex)
 			this.#handelClick()
 		})
 
@@ -65,21 +62,6 @@ export default class IntroModal extends HTMLElement {
 	#setInitiateState() {
 		this.style.top = `${window.innerHeight / 2 - this.offsetHeight / 2}px`
 		this.style.left = `${window.innerWidth / 2 - this.offsetWidth / 2}px`
-		this.#introElements.forEach((element) => {
-			this.#introElementsBackgroundColors.set(
-				element,
-				getComputedStyle(element).backgroundColor
-			)
-		})
-		this.#dimStyle.innerHTML = `
-				body > * {
-					background-color: dimgray;
-				}
-				body {
-					background-color: dimgray;
-				}
-		
-		`
 	}
 
 	#handelClick() {
@@ -89,60 +71,83 @@ export default class IntroModal extends HTMLElement {
 			this.#introDescriptions[this.#currentIndex].description
 		this.#heading.textContent =
 			this.#introDescriptions[this.#currentIndex].heading
-		document.head.append(this.#dimStyle)
-		this.style.filter = 'none'
-		this.style.backgroundColor = 'white'
-		this.style.zIndex = '100'
-		let bgColor =
-			this.#introElementsBackgroundColors.get(currentIntroElement)
-		if (bgColor === 'rgba(0, 0, 0, 0)') {
-			bgColor = 'white'
-		}
-		currentIntroElement.style.backgroundColor = bgColor
-		currentIntroElement.style.filter = 'none'
-		if (prevoiusElement) {
-			prevoiusElement.style.backgroundColor = 'dimgray'
-		}
+
 		const { top, left, height, width, bottom } =
 			currentIntroElement.getBoundingClientRect()
 		const scrollHeight = document.documentElement.scrollHeight
 		const scrollTop = document.documentElement.scrollTop
 
-		if (scrollHeight - (scrollTop + bottom) > height) {
-			this.style.top = `${
-				document.documentElement.scrollTop + top + height + 10
-			}px`
-		} else if (top > height) {
-			this.style.top = `${
-				document.documentElement.scrollTop +
-				top -
-				(this.offsetHeight + 10)
-			}px`
-		} else {
+		this.#backdropElement.style.top = `${scrollTop + top}px`
+		this.#backdropElement.style.left = `${left}px`
+		this.#backdropElement.style.height = `${height}px`
+		this.#backdropElement.style.width = `${width}px`
+
+		if (window.innerHeight - height <= this.offsetHeight * 2) {
+			currentIntroElement.scrollIntoView({
+				behavior: 'smooth',
+				block: 'center',
+			})
+
 			this.style.top = `${
 				document.documentElement.scrollTop +
 				top +
 				height / 2 -
 				this.offsetHeight / 2
 			}px`
+			console.log(1)
+		} else if (scrollHeight - (scrollTop + bottom) >= this.offsetHeight) {
+			currentIntroElement.scrollIntoView({
+				behavior: 'smooth',
+				block: 'center',
+			})
+
+			this.style.top = `${
+				document.documentElement.scrollTop + top + height + 10
+			}px`
+			console.log(2)
+		} else {
+			this.style.top = `${
+				document.documentElement.scrollTop +
+				top -
+				(this.offsetHeight + 10)
+			}px`
+			console.log(3)
 		}
 
-		currentIntroElement.scrollIntoView({
-			behavior: 'smooth',
-			block: 'center',
-		})
-		// this.#backdropElement.style.top = `${top}px`
-		// this.#backdropElement.style.left = `${left}px`
-		// this.#backdropElement.style.height = `${height}px`
-		// this.#backdropElement.style.width = `${width}px`
+		// if (scrollHeight - (scrollTop + bottom) > height) {
+		// 	this.style.top = `${
+		// 		document.documentElement.scrollTop + top + height + 10
+		// 	}px`
+		// } else if (top > height) {
+		// 	this.style.top = `${
+		// 		document.documentElement.scrollTop +
+		// 		top -
+		// 		(this.offsetHeight + 10)
+		// 	}px`
+		// } else {
+		// 	this.style.top = `${
+		// 		document.documentElement.scrollTop +
+		// 		top +
+		// 		height / 2 -
+		// 		this.offsetHeight / 2
+		// 	}px`
+		// }
+
+		// currentIntroElement.scrollIntoView({
+		// 	behavior: 'smooth',
+		// 	block: 'center',
+		// })
 	}
 
 	#createBackdrop() {
 		this.#backdropElement = document.createElement('div')
-		this.#backdropElement.style.height = '100px'
-		this.#backdropElement.style.width = '200px'
-		this.#backdropElement.style.backgroundColor = 'red'
 		this.#backdropElement.style.position = 'absolute'
+		this.#backdropElement.style.top = '-10px'
+		this.#backdropElement.style.boxSizing = 'border-box'
+		this.#backdropElement.style.transition = 'all 0.3s'
+		this.#backdropElement.style.zIndex = '999998'
+		this.#backdropElement.style.boxShadow =
+			'0 0 0 5000px rgba(0, 0, 0, 0.533), 0 0 0 2px black'
 		document.body.prepend(this.#backdropElement)
 	}
 }
