@@ -33,4 +33,4 @@ const introDescriptions = [
 ]
 const m = new IntroModal(introElements, introDescriptions)
 
-document.body.append(m)
+m.start()

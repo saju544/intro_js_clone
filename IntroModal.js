@@ -9,11 +9,16 @@ export default class IntroModal extends HTMLElement {
 	#introElements
 	#introDescriptions
 	#currentIndex
-	#prevoisIndex
-	#introElementsBackgroundColors
-	#dimStyle
 	#backdropElement
-	constructor(introElements, introDescriptions) {
+	#initialDescription
+	constructor(
+		introElements,
+		introDescriptions,
+		initialDescription = {
+			heading: 'Start Intro',
+			description: 'Lets satrt the introduction',
+		}
+	) {
 		super()
 		const root = this.attachShadow({ mode: 'open' })
 		root.append(modalTemplate.content.cloneNode(true))
@@ -22,18 +27,25 @@ export default class IntroModal extends HTMLElement {
 		this.#nextBtn = root.querySelector('.next-btn')
 		this.#heading = root.querySelector('.heading')
 		this.#description = root.querySelector('.description')
+		this.#initialDescription = initialDescription
 		this.#backdropElement = null
 		this.#introElements = introElements
 		this.#introDescriptions = introDescriptions
 		this.#currentIndex = -1
-		this.#prevoisIndex = null
 	}
 	connectedCallback() {
 		this.#setInitiateState()
 		this.#createBackdrop()
 
 		this.#closeBtn.addEventListener('click', () => {
-			this.remove()
+			this.end()
+		})
+
+		document.addEventListener('click', (ev) => {
+			if (ev.target === this) {
+				return
+			}
+			this.end()
 		})
 
 		this.#backBtn.addEventListener('click', () => {
@@ -42,7 +54,6 @@ export default class IntroModal extends HTMLElement {
 				this.#currentIndex = 0
 				return
 			}
-			this.#prevoisIndex = this.#currentIndex + 1
 			this.#handelClick()
 		})
 
@@ -52,27 +63,26 @@ export default class IntroModal extends HTMLElement {
 				this.#currentIndex = this.#introElements.length - 1
 				return
 			}
-			if (this.#currentIndex > 0) {
-				this.#prevoisIndex = this.#currentIndex - 1
-			}
 			this.#handelClick()
 		})
 	}
 
 	#setInitiateState() {
+		this.#description.textContent = this.#initialDescription.description
+		this.#heading.textContent = this.#initialDescription.heading
+
 		this.style.top = `${window.innerHeight / 2 - this.offsetHeight / 2}px`
 		this.style.left = `${window.innerWidth / 2 - this.offsetWidth / 2}px`
 	}
 
 	#handelClick() {
 		const currentIntroElement = this.#introElements[this.#currentIndex]
-		const prevoiusElement = this.#introElements[this.#prevoisIndex]
 		this.#description.textContent =
 			this.#introDescriptions[this.#currentIndex].description
 		this.#heading.textContent =
 			this.#introDescriptions[this.#currentIndex].heading
 
-		const { top, left, height, width, bottom } =
+		const { top, left, right, height, width, bottom } =
 			currentIntroElement.getBoundingClientRect()
 		const scrollHeight = document.documentElement.scrollHeight
 		const scrollTop = document.documentElement.scrollTop
@@ -81,62 +91,50 @@ export default class IntroModal extends HTMLElement {
 		this.#backdropElement.style.left = `${left}px`
 		this.#backdropElement.style.height = `${height}px`
 		this.#backdropElement.style.width = `${width}px`
+		const modalHeight = this.offsetHeight
+		const modalWidth = this.offsetWidth
 
-		if (window.innerHeight - height <= this.offsetHeight * 2) {
-			currentIntroElement.scrollIntoView({
-				behavior: 'smooth',
-				block: 'center',
-			})
-
+		if (window.innerHeight - height <= modalHeight * 2) {
 			this.style.top = `${
 				document.documentElement.scrollTop +
 				top +
 				height / 2 -
-				this.offsetHeight / 2
+				modalHeight / 2
 			}px`
-			console.log(1)
-		} else if (scrollHeight - (scrollTop + bottom) >= this.offsetHeight) {
-			currentIntroElement.scrollIntoView({
-				behavior: 'smooth',
-				block: 'center',
-			})
-
+		} else if (scrollHeight - (scrollTop + bottom) >= modalHeight + 10) {
 			this.style.top = `${
 				document.documentElement.scrollTop + top + height + 10
 			}px`
-			console.log(2)
 		} else {
 			this.style.top = `${
-				document.documentElement.scrollTop +
-				top -
-				(this.offsetHeight + 10)
+				document.documentElement.scrollTop + top - (modalHeight + 10)
 			}px`
-			console.log(3)
 		}
 
-		// if (scrollHeight - (scrollTop + bottom) > height) {
-		// 	this.style.top = `${
-		// 		document.documentElement.scrollTop + top + height + 10
-		// 	}px`
-		// } else if (top > height) {
-		// 	this.style.top = `${
-		// 		document.documentElement.scrollTop +
-		// 		top -
-		// 		(this.offsetHeight + 10)
-		// 	}px`
-		// } else {
-		// 	this.style.top = `${
-		// 		document.documentElement.scrollTop +
-		// 		top +
-		// 		height / 2 -
-		// 		this.offsetHeight / 2
-		// 	}px`
-		// }
+		if (left >= modalWidth + 10) {
+			this.style.left = `${left - (modalWidth + 10)}px`
+			this.style.top = `${
+				document.documentElement.scrollTop +
+				top +
+				height / 2 -
+				modalHeight / 2
+			}px`
+		} else if (window.innerWidth - right >= modalWidth + 10) {
+			this.style.left = `${right + 10}px`
+			this.style.top = `${
+				document.documentElement.scrollTop +
+				top +
+				height / 2 -
+				modalHeight / 2
+			}px`
+		} else {
+			this.style.left = `${window.innerWidth / 2 - modalWidth / 2}px`
+		}
 
-		// currentIntroElement.scrollIntoView({
-		// 	behavior: 'smooth',
-		// 	block: 'center',
-		// })
+		currentIntroElement.scrollIntoView({
+			behavior: 'smooth',
+			block: 'center',
+		})
 	}
 
 	#createBackdrop() {
@@ -149,6 +147,13 @@ export default class IntroModal extends HTMLElement {
 		this.#backdropElement.style.boxShadow =
 			'0 0 0 5000px rgba(0, 0, 0, 0.533), 0 0 0 2px black'
 		document.body.prepend(this.#backdropElement)
+	}
+	start() {
+		document.body.append(this)
+	}
+	end() {
+		this.#backdropElement.remove()
+		this.remove()
 	}
 }
 customElements.define('intro-modal', IntroModal)
