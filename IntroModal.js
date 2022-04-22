@@ -12,6 +12,7 @@ export default class IntroModal extends HTMLElement {
 	#prevoisIndex
 	#introElementsBackgroundColors
 	#dimStyle
+	#backdropElement
 	constructor(introElements, introDescriptions) {
 		super()
 		const root = this.attachShadow({ mode: 'open' })
@@ -21,6 +22,7 @@ export default class IntroModal extends HTMLElement {
 		this.#nextBtn = root.querySelector('.next-btn')
 		this.#heading = root.querySelector('.heading')
 		this.#description = root.querySelector('.description')
+		this.#backdropElement = null
 		this.#introElements = introElements
 		this.#introDescriptions = introDescriptions
 		this.#currentIndex = -1
@@ -30,6 +32,7 @@ export default class IntroModal extends HTMLElement {
 	}
 	connectedCallback() {
 		this.#setInitiateState()
+		// this.#createBackdrop()
 
 		this.#closeBtn.addEventListener('click', () => {
 			this.remove()
@@ -70,7 +73,6 @@ export default class IntroModal extends HTMLElement {
 		})
 		this.#dimStyle.innerHTML = `
 				body > * {
-					filter: grayscale(100%);
 					background-color: dimgray;
 				}
 				body {
@@ -91,13 +93,57 @@ export default class IntroModal extends HTMLElement {
 		this.style.filter = 'none'
 		this.style.backgroundColor = 'white'
 		this.style.zIndex = '100'
-		currentIntroElement.style.backgroundColor = 'white'
+		let bgColor =
+			this.#introElementsBackgroundColors.get(currentIntroElement)
+		if (bgColor === 'rgba(0, 0, 0, 0)') {
+			bgColor = 'white'
+		}
+		currentIntroElement.style.backgroundColor = bgColor
 		currentIntroElement.style.filter = 'none'
 		if (prevoiusElement) {
 			prevoiusElement.style.backgroundColor = 'dimgray'
-			prevoiusElement.style.filter = 'grayscale(100%)'
 		}
-		console.log(currentIntroElement)
+		const { top, left, height, width, bottom } =
+			currentIntroElement.getBoundingClientRect()
+		const scrollHeight = document.documentElement.scrollHeight
+		const scrollTop = document.documentElement.scrollTop
+
+		if (scrollHeight - (scrollTop + bottom) > height) {
+			this.style.top = `${
+				document.documentElement.scrollTop + top + height + 10
+			}px`
+		} else if (top > height) {
+			this.style.top = `${
+				document.documentElement.scrollTop +
+				top -
+				(this.offsetHeight + 10)
+			}px`
+		} else {
+			this.style.top = `${
+				document.documentElement.scrollTop +
+				top +
+				height / 2 -
+				this.offsetHeight / 2
+			}px`
+		}
+
+		currentIntroElement.scrollIntoView({
+			behavior: 'smooth',
+			block: 'center',
+		})
+		// this.#backdropElement.style.top = `${top}px`
+		// this.#backdropElement.style.left = `${left}px`
+		// this.#backdropElement.style.height = `${height}px`
+		// this.#backdropElement.style.width = `${width}px`
+	}
+
+	#createBackdrop() {
+		this.#backdropElement = document.createElement('div')
+		this.#backdropElement.style.height = '100px'
+		this.#backdropElement.style.width = '200px'
+		this.#backdropElement.style.backgroundColor = 'red'
+		this.#backdropElement.style.position = 'absolute'
+		document.body.prepend(this.#backdropElement)
 	}
 }
 customElements.define('intro-modal', IntroModal)
