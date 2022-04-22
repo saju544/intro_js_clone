@@ -1,133 +1,103 @@
-const content = /*html*/ `
-        <div class="intro-modal">
-            <button class="close-btn">X</button>
-            <div class="heading">Heading</div>
-            <div class="description">
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-                Libero, eaque.
-            </div>
-            <div class="progess-bar"></div>
-            <div class="button-group">
-                <button class="back-btn">Back</button
-                ><button class="next-btn">Next</button>
-            </div>
-        </div>
-		<style>
-			.intro-modal * {
-				box-sizing: border-box;
-				font-family: sans-serif;
-				margin: 0;
-				padding: 0;
-			}
-			
-			.intro-modal {
-				transition: all 0.3s;
-				width: fit-content;
-				max-width: 20rem;
-				min-width: 10rem;
-				box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.233);
-				border-radius: 1rem;
-				padding: 1rem;
-				position: fixed;
-                background-color: white;
-			}
-
-			.close-btn {
-				background-color: tomato;
-				border-radius: 50%;
-				color: white;
-				border: none;
-				width: 1.5rem;
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				aspect-ratio: 1;
-				position: absolute;
-				top: 0.5rem;
-				right: 0.5rem;
-				transition: transform 0.1s;
-			}
-
-			.heading {
-				font-size: 1.3rem;
-			}
-
-			.description {
-				padding: 0.5rem 0 0.8rem;
-				line-height: 1.3rem;
-			}
-			.button-group {
-				display: flex;
-				justify-content: space-between;
-			}
-
-			.button-group button {
-				font-size: 1rem;
-				padding: 0.2rem 0.5rem;
-				border-radius: 0.5rem;
-				border: none;
-				background-color: slateblue;
-				color: white;
-			}
-
-			.button-group button:hover,
-			.close-btn:hover {
-				filter: saturate(300%);
-				cursor: pointer;
-				transform: scale(1.05);
-			}
-			.button-group button:active,
-			.close-btn:active {
-				transform: scale(0.95);
-			}
-
-		</style>
-`
+const modalTemplate = document.querySelector('#modal')
 
 export default class IntroModal extends HTMLElement {
+	#closeBtn
+	#backBtn
+	#nextBtn
+	#heading
+	#description
+	#introElements
+	#introDescriptions
+	#currentIndex
+	#prevoisIndex
+	#introElementsBackgroundColors
+	#dimStyle
 	constructor(introElements, introDescriptions) {
 		super()
-		this.attachShadow({ mode: 'open' })
-		this.shadowRoot.innerHTML = content
-		this.modal = this.shadowRoot.children[0]
-		this.closeBtn = this.modal.querySelector('.close-btn')
-		this.backBtn = this.modal.querySelector('.back-btn')
-		this.nextBtn = this.modal.querySelector('.next-btn')
-		this.heading = this.modal.querySelector('.heading')
-		this.description = this.modal.querySelector('.description')
-		this.introElements = introElements
-		this.introDescriptions = introDescriptions
+		const root = this.attachShadow({ mode: 'open' })
+		root.append(modalTemplate.content.cloneNode(true))
+		this.#closeBtn = root.querySelector('.close-btn')
+		this.#backBtn = root.querySelector('.back-btn')
+		this.#nextBtn = root.querySelector('.next-btn')
+		this.#heading = root.querySelector('.heading')
+		this.#description = root.querySelector('.description')
+		this.#introElements = introElements
+		this.#introDescriptions = introDescriptions
+		this.#currentIndex = -1
+		this.#prevoisIndex = null
+		this.#introElementsBackgroundColors = new WeakMap()
+		this.#dimStyle = document.createElement('style')
 	}
 	connectedCallback() {
-		this.closeBtn.addEventListener('click', () => {
-			this.modal.remove()
-		})
-		let count = -1
-		this.backBtn.addEventListener('click', () => {
-			count--
-			if (count < 0) {
-				count = 0
-				return
-			}
-			console.log(count)
-			handelClick()
+		this.#setInitiateState()
+
+		this.#closeBtn.addEventListener('click', () => {
+			this.remove()
 		})
 
-		this.nextBtn.addEventListener('click', () => {
-			count++
-			if (count >= this.introElements.length) {
-				count = this.introElements.length - 1
+		this.#backBtn.addEventListener('click', () => {
+			this.#currentIndex--
+			if (this.#currentIndex < 0) {
+				this.#currentIndex = 0
 				return
 			}
-			console.log(count)
-			handelClick()
+			this.#prevoisIndex = this.#currentIndex + 1
+			console.log(this.#currentIndex)
+			this.#handelClick()
 		})
 
-		const handelClick = () => {
-			const cuurentIntroElement = this.introDescriptions[count]
-			this.description.textContent = cuurentIntroElement.description
-			this.heading.textContent = cuurentIntroElement.heading
+		this.#nextBtn.addEventListener('click', () => {
+			this.#currentIndex++
+			if (this.#currentIndex >= this.#introElements.length) {
+				this.#currentIndex = this.#introElements.length - 1
+				return
+			}
+			if (this.#currentIndex > 0) {
+				this.#prevoisIndex = this.#currentIndex - 1
+			}
+			this.#handelClick()
+		})
+	}
+
+	#setInitiateState() {
+		this.style.top = `${window.innerHeight / 2 - this.offsetHeight / 2}px`
+		this.style.left = `${window.innerWidth / 2 - this.offsetWidth / 2}px`
+		this.#introElements.forEach((element) => {
+			this.#introElementsBackgroundColors.set(
+				element,
+				getComputedStyle(element).backgroundColor
+			)
+		})
+		this.#dimStyle.innerHTML = `
+				body > * {
+					filter: grayscale(100%);
+					background-color: dimgray;
+				}
+				body {
+					background-color: dimgray;
+				}
+		
+		`
+	}
+
+	#handelClick() {
+		const currentIntroElement = this.#introElements[this.#currentIndex]
+		const prevoiusElement = this.#introElements[this.#prevoisIndex]
+		this.#description.textContent =
+			this.#introDescriptions[this.#currentIndex].description
+		this.#heading.textContent =
+			this.#introDescriptions[this.#currentIndex].heading
+		document.head.append(this.#dimStyle)
+		this.style.filter = 'none'
+		this.style.backgroundColor = 'white'
+		this.style.zIndex = '100'
+		currentIntroElement.style.backgroundColor = 'white'
+		currentIntroElement.style.filter = 'none'
+		if (prevoiusElement) {
+			prevoiusElement.style.backgroundColor = 'dimgray'
+			prevoiusElement.style.filter = 'grayscale(100%)'
 		}
+		console.log(currentIntroElement)
 	}
 }
 customElements.define('intro-modal', IntroModal)

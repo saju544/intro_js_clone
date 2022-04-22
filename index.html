@@ -8,6 +8,7 @@
 		<script src="./main.js" type="module"></script>
 		<title>Document</title>
 	</head>
+
 	<body>
 		<!-- <intro-modal></intro-modal> -->
 		<h1 class="intro">Hello</h1>
@@ -48,5 +49,91 @@
 		<div style="display: flex; justify-content: flex-end">
 			<img class="intro" src="./images/pic3.jpg" alt="" width="60%" />
 		</div>
+		<template id="modal">
+			<button class="close-btn">X</button>
+			<div class="heading">Heading</div>
+			<div class="description">
+				Lorem ipsum dolor sit amet consectetur, adipisicing elit.
+				Libero, eaque.
+			</div>
+			<div class="progess-bar"></div>
+			<div class="button-group">
+				<button class="back-btn">Back</button
+				><button class="next-btn">Next</button>
+			</div>
+			<style>
+				* {
+					box-sizing: border-box;
+					font-family: sans-serif;
+					margin: 0;
+					padding: 0;
+				}
+
+				:host {
+					display: block;
+					transition: all 0.3s;
+					width: fit-content;
+					max-width: 20rem;
+					min-width: 10rem;
+					box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.233);
+					border-radius: 1rem;
+					padding: 1rem;
+					position: fixed;
+					background-color: white;
+				}
+
+				.close-btn {
+					background-color: tomato;
+					border-radius: 50%;
+					color: white;
+					border: none;
+					width: 1.5rem;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					aspect-ratio: 1;
+					position: absolute;
+					top: 0.5rem;
+					right: 0.5rem;
+					transition: transform 0.1s;
+				}
+
+				.heading {
+					font-size: 1.3rem;
+					font-weight: bold;
+				}
+
+				.description {
+					padding: 0.5rem 0 0.8rem;
+					line-height: 1.3rem;
+				}
+
+				.button-group {
+					display: flex;
+					justify-content: space-between;
+				}
+
+				.button-group button {
+					font-size: 1.2rem;
+					padding: 0.2rem 0.5rem;
+					border-radius: 0.5rem;
+					border: none;
+					background-color: slateblue;
+					color: white;
+				}
+
+				.button-group button:hover,
+				.close-btn:hover {
+					filter: saturate(300%);
+					cursor: pointer;
+					transform: scale(1.05);
+				}
+
+				.button-group button:active,
+				.close-btn:active {
+					transform: scale(0.95);
+				}
+			</style>
+		</template>
 	</body>
 </html>
