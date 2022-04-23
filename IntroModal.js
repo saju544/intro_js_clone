@@ -11,6 +11,9 @@ export default class IntroModal extends HTMLElement {
 	#currentIndex
 	#backdropElement
 	#initialDescription
+	#progressbar
+	#dots
+	#previousIndex
 	constructor(
 		introElements,
 		introDescriptions,
@@ -27,11 +30,14 @@ export default class IntroModal extends HTMLElement {
 		this.#nextBtn = root.querySelector('.next-btn')
 		this.#heading = root.querySelector('.heading')
 		this.#description = root.querySelector('.description')
+		this.#progressbar = root.querySelector('.progess-bar')
+		this.#dots = []
 		this.#initialDescription = initialDescription
 		this.#backdropElement = null
 		this.#introElements = introElements
 		this.#introDescriptions = introDescriptions
 		this.#currentIndex = -1
+		this.#previousIndex = 0
 	}
 	connectedCallback() {
 		this.#setInitiateState()
@@ -54,6 +60,7 @@ export default class IntroModal extends HTMLElement {
 				this.#currentIndex = 0
 				return
 			}
+			this.#previousIndex = this.#currentIndex + 1
 			this.#handelClick()
 		})
 
@@ -63,6 +70,7 @@ export default class IntroModal extends HTMLElement {
 				this.#currentIndex = this.#introElements.length - 1
 				return
 			}
+			this.#previousIndex = this.#currentIndex - 1
 			this.#handelClick()
 		})
 	}
@@ -73,6 +81,12 @@ export default class IntroModal extends HTMLElement {
 
 		this.style.top = `${window.innerHeight / 2 - this.offsetHeight / 2}px`
 		this.style.left = `${window.innerWidth / 2 - this.offsetWidth / 2}px`
+
+		for (let i = 0; i < this.#introElements.length; i++) {
+			const dot = document.createElement('div')
+			this.#dots.push(dot)
+			this.#progressbar.append(dot)
+		}
 	}
 
 	#handelClick() {
@@ -129,6 +143,14 @@ export default class IntroModal extends HTMLElement {
 			}px`
 		} else {
 			this.style.left = `${window.innerWidth / 2 - modalWidth / 2}px`
+		}
+
+		this.#dots[this.#currentIndex].style.width = '1.5rem'
+		this.#dots[this.#currentIndex].style.borderRadius = '1rem'
+
+		if (this.#previousIndex >= 0) {
+			this.#dots[this.#previousIndex].style.width = '0.5rem'
+			this.#dots[this.#previousIndex].style.borderRadius = '50%'
 		}
 
 		currentIntroElement.scrollIntoView({
